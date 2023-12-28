@@ -4,6 +4,7 @@ use figment::{
     Figment,
 };
 use quinn::{EndpointConfig, MtuDiscoveryConfig, TransportConfig};
+use quinn::congestion::BbrConfig;
 use rustls::{Certificate, RootCertStore};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -236,7 +237,7 @@ impl ClientConfig {
 
         transport_config.max_idle_timeout(Some(self.connection.timeout.try_into()?));
         transport_config.keep_alive_interval(Some(self.connection.keep_alive_interval));
-
+        transport_config.congestion_controller_factory(Arc::new(BbrConfig::default()));
         mtu_config.upper_bound(self.connection.mtu as u16 + QUIC_MTU_OVERHEAD);
 
         transport_config.mtu_discovery_config(Some(mtu_config));
@@ -277,6 +278,7 @@ impl TunnelConfig {
         let mut mtu_config = MtuDiscoveryConfig::default();
 
         transport_config.max_idle_timeout(Some(connection_config.timeout.try_into()?));
+        transport_config.congestion_controller_factory(Arc::new(BbrConfig::default()));
 
         mtu_config.upper_bound(connection_config.mtu as u16 + QUIC_MTU_OVERHEAD);
 
